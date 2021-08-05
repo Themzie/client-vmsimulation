@@ -8,13 +8,13 @@ import zw.msc.thembelani.vmmigrationsimulation.model.MemoryPage;
 import zw.msc.thembelani.vmmigrationsimulation.service.MemoryPageService;
 import zw.msc.thembelani.vmmigrationsimulation.service.MigrationService;
 import zw.msc.thembelani.vmmigrationsimulation.util.MigrationStatus;
-import zw.msc.thembelani.vmmigrationsimulation.util.ObjectSizeFetcher;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -43,14 +43,14 @@ public class MigrationServiceImpl implements MigrationService {
         String host = environment.getRequiredProperty("server.host");
         String port = environment.getRequiredProperty("migration.server.port");
         log.info("Connected to server {} , port {}",host,port);
-             log.info("Timer started");
         Instant start = Instant.now();
             try (Socket socket = new Socket(host, Integer.parseInt(port));){
 
                 ObjectOutputStream outputStream ;
                 outputStream = new ObjectOutputStream(socket.getOutputStream());
-
-                log.info("Object to be written = {} " , memoryPagesList.size());
+                long totalMemorySent = memoryPagesList.stream().mapToLong(memoryPageItem -> VM.current().sizeOf(memoryPageItem)).sum();
+                log.info("-----------Total Memory to be sent {} bytes",totalMemorySent);
+                log.info(" -------------Number of Pages to be attempted to send -------------- {} " , memoryPagesList.size());
                 ObjectOutputStream finalOutputStream = outputStream;
                 log.info("Started migration  >>>>>");
                 memoryPagesList.forEach(memoryPageItem -> {
@@ -70,13 +70,12 @@ public class MigrationServiceImpl implements MigrationService {
                                 log.info("An error occured {}" ,e);
                             }
                         });
-                Instant end = Instant.now();
 
-                log.info("Total Time : {} in Milliseconds ", Duration.between(start,end).toMillis() );
-                log.info("Finished Sending at time {}",new Date(System.currentTimeMillis()));
                 log.info("TOTAL number of pages sent {}",memoryPagesList.size());
                 log.info("Total Data sent {} bytes", VM.current().sizeOf(memoryPagesList));
-                log.info("Dirty Pages {} :",this.memoryPageService.findAllPagesPerStatus(MigrationStatus.MODIFIED_AFTER_TRANSFER));
+                log.info("-------->>>>>>>>--------Dirty Pages {} :",this.memoryPageService.findAllPagesPerStatus(MigrationStatus.MODIFIED_AFTER_TRANSFER).size());
+                Instant end = Instant.now();
+                //log.info("Total Time : {} in Milliseconds ", Duration.between(start,end).toMillis() );
 
             } catch (IOException se) {
                 log.info("An error occured {}" ,se);

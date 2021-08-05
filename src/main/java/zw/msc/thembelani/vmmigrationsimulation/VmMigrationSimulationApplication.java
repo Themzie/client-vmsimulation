@@ -10,6 +10,7 @@ import zw.msc.thembelani.vmmigrationsimulation.service.MemoryPageService;
 import zw.msc.thembelani.vmmigrationsimulation.service.MigrationService;
 import zw.msc.thembelani.vmmigrationsimulation.util.MigrationStatus;
 
+import java.util.Date;
 import java.util.List;
 
 @SpringBootApplication
@@ -22,16 +23,19 @@ public class VmMigrationSimulationApplication {
         ApplicationContext ctx = SpringApplication.run(VmMigrationSimulationApplication.class, args);
         DatabasePopulatorService databasePopulatorService =  ctx.getBean(DatabasePopulatorService.class);
         MemoryPageService memoryPageService = ctx.getBean(MemoryPageService.class);
-        databasePopulatorService.defaultData(5000);
+        //databasePopulatorService.defaultData(20000);
         MigrationService migrationService =  ctx.getBean(MigrationService.class);
-        List<MemoryPage> memoryPageList =  migrationService.filterFormMigration(0.5, MigrationStatus.DEFAULT, 10000);
+        log.info("**********************Start {}****************************",new Date(System.currentTimeMillis()));
+        List<MemoryPage> memoryPageList =  migrationService.filterFormMigration(0.6, MigrationStatus.DEFAULT, 5000);
         migrationService.transfer(memoryPageList);
 
         //int totalPagesSent = memoryPageList.size();
         MemoryPage firstMemoryPage = memoryPageService.findFirstMemoryPage();
         MemoryPage lastMemoryPage = memoryPageService.findLastMemoryPage();
         log.info("******************** First {}, Last {}",firstMemoryPage.getId(), lastMemoryPage.getId());
-        memoryPageService.modifyMemoryPages(firstMemoryPage.getId(),lastMemoryPage.getId());
+
+        log.info("********** Modified Pages (Dirty from Main ) {}",memoryPageService.findAllPagesPerStatus(MigrationStatus.MODIFIED_AFTER_TRANSFER).size());
+        log.info("********************** End time {}****************************",new Date(System.currentTimeMillis()));
     }
 
 }

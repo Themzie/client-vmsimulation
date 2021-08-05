@@ -1,4 +1,5 @@
 package zw.msc.thembelani.vmmigrationsimulation.service;
 
-public class CompressionService {
+public interface CompressionService {
+    String encode(String input);
 }

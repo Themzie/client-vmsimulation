@@ -76,8 +76,6 @@ public class MemoryPageServiceImpl implements MemoryPageService {
             }
                 }
         );
-
-  log.info(">>>>>>> TOTAL DIRTY PAGES {}",modifiedAfterTransfer.size());
         return modifiedAfterTransfer;
     }
 }
